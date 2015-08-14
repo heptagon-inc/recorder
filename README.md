@@ -55,7 +55,16 @@ GLOBAL OPTIONS:
 
 ## Install
 
-To install, use `go get`:
+Download binary-file.
+
+```
+$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.1.0/0.1.0_linux_amd64.zip
+$ unzip 0.1.0_linux_amd64.zip
+$ mv recorder /usr/local/bin/
+$ chmod 755 /usr/local/bin/recorder
+```
+
+Or to install, use `go get`:
 
 ```bash
 $ go get -d github.com/heptagon-inc/recorder
