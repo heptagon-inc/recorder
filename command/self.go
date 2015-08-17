@@ -1,15 +1,16 @@
 package command
 
 import (
-	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"sort"
 	"strings"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/codegangsta/cli"
 )
@@ -34,22 +35,50 @@ func (p Snapshots) Less(i, j int) bool {
 }
 
 func CmdSelf(c *cli.Context) {
+	// logging
+	log.SetOutput(os.Stderr)
+	logger := logrus.New()
+	if c.Bool("json") {
+		logger.Formatter = new(logrus.JSONFormatter)
+	}
+
 	// get region
 	r_url := "http://169.254.169.254/latest/meta-data/local-hostname"
-	r_res, _ := http.Get(r_url)
-	r_b, _ := ioutil.ReadAll(r_res.Body)
-	defer r_res.Body.Close()
+	r_res, err := http.Get(r_url)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	r_b, err := ioutil.ReadAll(r_res.Body)
+	if err != nil {
+		logger.Fatal(err)
+	}
 	region := strings.Split(string(r_b), ".")[1]
+	defer r_res.Body.Close()
+
+	logger.WithFields(logrus.Fields{
+		"region": region,
+	}).Info("get region")
 
 	// get instance-id
-	url := "http://169.254.169.254/latest/meta-data/instance-id"
-	res, _ := http.Get(url)
-	b, _ := ioutil.ReadAll(res.Body)
-	defer res.Body.Close()
-	instance_id := string(b)
+	i_url := "http://169.254.169.254/latest/meta-data/instance-id"
+	i_res, err := http.Get(i_url)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	i_b, err := ioutil.ReadAll(i_res.Body)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	instance_id := string(i_b)
+	defer i_res.Body.Close()
+
+	logger.WithFields(logrus.Fields{
+		"instance-id": instance_id,
+	}).Info("get instance-id")
 
 	// Auth
 	svc := ec2.New(&aws.Config{Region: aws.String(region)})
+	logger.Info("auth credential")
 
 	// create instance-id-config
 	params := &ec2.DescribeInstancesInput{
@@ -61,8 +90,9 @@ func CmdSelf(c *cli.Context) {
 	// get instance-info
 	resp, err := svc.DescribeInstances(params)
 	if err != nil {
-		panic(err)
+		logger.Fatal(err)
 	}
+	logger.Info("get instance-info")
 
 	// get all volume-id
 	var volume_ids []string = make([]string, 1)
@@ -78,6 +108,10 @@ func CmdSelf(c *cli.Context) {
 		}
 	}
 
+	logger.WithFields(logrus.Fields{
+		"volume-ids": volume_ids,
+	}).Info("get volume-ids")
+
 	for _, volume_id := range volume_ids {
 		// Description
 		snapshotDescription := "Created by recorder from " + volume_id + " of " + instance_id
@@ -92,15 +126,32 @@ func CmdSelf(c *cli.Context) {
 		snapshotResp, err := svc.CreateSnapshot(snapshotParams)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				fmt.Println(awsErr.Code(), awsErr.Message(), awsErr.OrigErr())
+				logger.WithFields(logrus.Fields{
+					"awsErr.Code":    awsErr.Code(),
+					"awsErr.Message": awsErr.Message(),
+					"awsErr.OrigErr": awsErr.OrigErr(),
+				}).Error("create snapshot")
 				if reqErr, ok := err.(awserr.RequestFailure); ok {
-					fmt.Println(reqErr.Code(), reqErr.Message(), reqErr.StatusCode(), reqErr.RequestID())
+					logger.WithFields(logrus.Fields{
+						"reqErr.Code":       reqErr.Code(),
+						"reqErr.Message":    reqErr.Message(),
+						"reqErr.StatusCode": reqErr.StatusCode(),
+						"reqErr.RequestID":  reqErr.RequestID(),
+					}).Error("create snapshot")
 				}
 			} else {
-				fmt.Println(err.Error())
+				logger.WithFields(logrus.Fields{
+					"err.Error": err.Error(),
+				}).Error("create snapshot")
 			}
+			logger.Fatal("create snapshot")
 		}
-		fmt.Println(awsutil.Prettify(snapshotResp))
+		logger.WithFields(logrus.Fields{
+			"InstanceID":  instance_id,
+			"VolumeID":    *snapshotResp.VolumeID,
+			"SnapshotID":  *snapshotResp.SnapshotID,
+			"Description": *snapshotResp.Description,
+		}).Info("create snapshot")
 
 		// snapshot lifecycle
 		// describe-snapshot config
@@ -118,14 +169,27 @@ func CmdSelf(c *cli.Context) {
 		describeResp, err := svc.DescribeSnapshots(DescribeSnapshotParams)
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
-				fmt.Println(awsErr.Code(), awsErr.Message(), awsErr.OrigErr())
+				logger.WithFields(logrus.Fields{
+					"awsErr.Code":    awsErr.Code(),
+					"awsErr.Message": awsErr.Message(),
+					"awsErr.OrigErr": awsErr.OrigErr(),
+				}).Error("describe snapshot")
 				if reqErr, ok := err.(awserr.RequestFailure); ok {
-					fmt.Println(reqErr.Code(), reqErr.Message(), reqErr.StatusCode(), reqErr.RequestID())
+					logger.WithFields(logrus.Fields{
+						"reqErr.Code":       reqErr.Code(),
+						"reqErr.Message":    reqErr.Message(),
+						"reqErr.StatusCode": reqErr.StatusCode(),
+						"reqErr.RequestID":  reqErr.RequestID(),
+					}).Error("describe snapshot")
 				}
 			} else {
-				fmt.Println(err.Error())
+				logger.WithFields(logrus.Fields{
+					"err.Error": err.Error(),
+				}).Error("describe snapshot")
 			}
+			logger.Fatal("describe snapshot")
 		}
+		logger.Info("describe snapshot")
 
 		// linkage of snapshot-id and the start-time
 		var snapshotId Snapshots = make([]Snapshot, 1)
@@ -140,6 +204,10 @@ func CmdSelf(c *cli.Context) {
 		// sort asc
 		sort.Sort(snapshotId)
 		// If the number of snapshot is life-cycle or more, Delete snapshot.
+		logger.WithFields(logrus.Fields{
+			"lifecycle": c.Int("lifecycle"),
+			"snapshots": len(snapshotId),
+		}).Info("life cycle settings")
 		for len(snapshotId) > c.Int("lifecycle") {
 			for index, snapshots := range snapshotId {
 				if index == 0 {
@@ -150,19 +218,35 @@ func CmdSelf(c *cli.Context) {
 					_, err := svc.DeleteSnapshot(deleteParam)
 					if err != nil {
 						if awsErr, ok := err.(awserr.Error); ok {
-							fmt.Println(awsErr.Code(), awsErr.Message(), awsErr.OrigErr())
+							logger.WithFields(logrus.Fields{
+								"SnapshotID":     snapshots.snapshotId,
+								"awsErr.Code":    awsErr.Code(),
+								"awsErr.Message": awsErr.Message(),
+								"awsErr.OrigErr": awsErr.OrigErr(),
+							}).Error("delete snapshot")
 							if reqErr, ok := err.(awserr.RequestFailure); ok {
-								fmt.Println(reqErr.Code(), reqErr.Message(), reqErr.StatusCode(), reqErr.RequestID())
+								logger.WithFields(logrus.Fields{
+									"SnapshotID":        snapshots.snapshotId,
+									"reqErr.Code":       reqErr.Code(),
+									"reqErr.Message":    reqErr.Message(),
+									"reqErr.StatusCode": reqErr.StatusCode(),
+									"reqErr.RequestID":  reqErr.RequestID(),
+								}).Error("delete snapshot")
 							}
 						} else {
-							fmt.Println(err.Error())
+							logger.WithFields(logrus.Fields{
+								"SnapshotID": snapshots.snapshotId,
+								"err.Error":  err.Error(),
+							}).Error("delete snapshot")
 						}
+						logger.Fatal("delete snapshot")
 					}
-					deleteMessage := "deleted: " + snapshots.snapshotId
-					fmt.Println(deleteMessage)
+					logger.WithFields(logrus.Fields{
+						"SnapshotID": snapshots.snapshotId,
+					}).Info("delete snapshot")
 				}
 			}
-			// delete snapshotID
+			// remove snapshotID
 			snapshotId = append(snapshotId[1:])
 		}
 	}
