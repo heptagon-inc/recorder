@@ -22,6 +22,9 @@ var Commands = []cli.Command{
 				Value: 5,
 				Usage: "Set the number of life cycle for snapshot.",
 			},
+			cli.BoolFlag{
+				Name: "json, j",
+			},
 		},
 	},
 }
