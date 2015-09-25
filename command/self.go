@@ -82,7 +82,7 @@ func CmdSelf(c *cli.Context) {
 
 	// create instance-id-config
 	params := &ec2.DescribeInstancesInput{
-		InstanceIDs: []*string{
+		InstanceIds: []*string{
 			aws.String(instance_id),
 		},
 	}
@@ -100,9 +100,9 @@ func CmdSelf(c *cli.Context) {
 		for _, res := range res.Instances {
 			for index, res := range res.BlockDeviceMappings {
 				if index == 0 {
-					volume_ids[0] = *res.EBS.VolumeID
+					volume_ids[0] = *res.Ebs.VolumeId
 				} else {
-					volume_ids = append(volume_ids, *res.EBS.VolumeID)
+					volume_ids = append(volume_ids, *res.Ebs.VolumeId)
 				}
 			}
 		}
@@ -118,7 +118,7 @@ func CmdSelf(c *cli.Context) {
 
 		// create-snapshot config
 		snapshotParams := &ec2.CreateSnapshotInput{
-			VolumeID:    aws.String(volume_id),
+			VolumeId:    aws.String(volume_id),
 			Description: aws.String(snapshotDescription),
 		}
 
@@ -148,8 +148,8 @@ func CmdSelf(c *cli.Context) {
 		}
 		logger.WithFields(logrus.Fields{
 			"InstanceID":  instance_id,
-			"VolumeID":    *snapshotResp.VolumeID,
-			"SnapshotID":  *snapshotResp.SnapshotID,
+			"VolumeId":    *snapshotResp.VolumeId,
+			"SnapshotId":  *snapshotResp.SnapshotId,
 			"Description": *snapshotResp.Description,
 		}).Info("create snapshot")
 
@@ -161,6 +161,12 @@ func CmdSelf(c *cli.Context) {
 					Name: aws.String("volume-id"),
 					Values: []*string{
 						aws.String(volume_id),
+					},
+				},
+				{
+					Name: aws.String("description"),
+					Values: []*string{
+						aws.String("Created by recorder from"),
 					},
 				},
 			},
@@ -195,10 +201,10 @@ func CmdSelf(c *cli.Context) {
 		var snapshotId Snapshots = make([]Snapshot, 1)
 		for index, res := range describeResp.Snapshots {
 			if index == 0 {
-				snapshotId[0].snapshotId = *res.SnapshotID
+				snapshotId[0].snapshotId = *res.SnapshotId
 				snapshotId[0].startTime = res.StartTime.Unix()
 			} else {
-				snapshotId = append(snapshotId, Snapshot{*res.SnapshotID, res.StartTime.Unix()})
+				snapshotId = append(snapshotId, Snapshot{*res.SnapshotId, res.StartTime.Unix()})
 			}
 		}
 		// sort asc
@@ -213,7 +219,7 @@ func CmdSelf(c *cli.Context) {
 				if index == 0 {
 					// delete snapshot
 					deleteParam := &ec2.DeleteSnapshotInput{
-						SnapshotID: aws.String(snapshots.snapshotId),
+						SnapshotId: aws.String(snapshots.snapshotId),
 					}
 					_, err := svc.DeleteSnapshot(deleteParam)
 					if err != nil {
