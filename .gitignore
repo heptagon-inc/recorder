@@ -2,3 +2,5 @@ recorder
 *.swp
 tmp/
 *.zip
+Vagrantfile
+.vagrant/
