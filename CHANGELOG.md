@@ -1,6 +1,6 @@
-## 0.1.0 (2015-08-13)
+## 0.2.1 (2015-09-29)
 
-Initial release
+Bugfix.
 
 ### Added
 
@@ -16,4 +16,4 @@ Initial release
 
 ### Fixed
 
-- Nothing
+- Fixed a bug that fail to snapshot deleted when ami exists.

@@ -7,6 +7,7 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"regexp"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,12 +16,28 @@ import (
 	"github.com/codegangsta/cli"
 )
 
+
 type Snapshot struct {
 	snapshotId string
 	startTime  int64
 }
 
 type Snapshots []Snapshot
+
+type Http struct {
+	Url string
+	Byte []byte
+}
+
+type Region struct {
+	Http
+	Region string
+}
+
+type InstanceId struct {
+	Http
+	InstanceId string
+}
 
 func (p Snapshots) Len() int {
 	return len(p)
@@ -34,60 +51,76 @@ func (p Snapshots) Less(i, j int) bool {
 	return p[i].startTime < p[j].startTime
 }
 
+func getRegion() *string {
+	r := Region{}
+	r.Url = "http://169.254.169.254/latest/meta-data/local-hostname"
+	res, err := http.Get(r.Url)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	r.Byte, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	r.Region = strings.Split(string(r.Byte), ".")[1]
+	defer res.Body.Close()
+	logger.WithFields(logrus.Fields{
+		"region": r.Region,
+	}).Info("get region")
+	return &r.Region
+}
+
+func getInstanceId() *string {
+	i := InstanceId{}
+	i.Url = "http://169.254.169.254/latest/meta-data/instance-id"
+	res, err := http.Get(i.Url)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	i.Byte, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		logger.Fatal(err)
+	}
+	i.InstanceId = string(i.Byte)
+	defer res.Body.Close()
+	logger.WithFields(logrus.Fields{
+		"instance-id": i.InstanceId,
+	}).Info("get instance-id")
+	return &i.InstanceId
+}
+
+func isOwnSnapshot(description string) (b bool) {
+	if m, _ := regexp.MatchString("Created by recorder from.*", description); !m {
+		return false
+	}
+	return true
+}
+
+var logger = logrus.New()
+
 func CmdSelf(c *cli.Context) {
 	// logging
 	log.SetOutput(os.Stderr)
-	logger := logrus.New()
 	if c.Bool("json") {
 		logger.Formatter = new(logrus.JSONFormatter)
 	}
 
 	// get region
-	r_url := "http://169.254.169.254/latest/meta-data/local-hostname"
-	r_res, err := http.Get(r_url)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	r_b, err := ioutil.ReadAll(r_res.Body)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	region := strings.Split(string(r_b), ".")[1]
-	defer r_res.Body.Close()
-
-	logger.WithFields(logrus.Fields{
-		"region": region,
-	}).Info("get region")
+	region := getRegion()
 
 	// get instance-id
-	i_url := "http://169.254.169.254/latest/meta-data/instance-id"
-	i_res, err := http.Get(i_url)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	i_b, err := ioutil.ReadAll(i_res.Body)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	instance_id := string(i_b)
-	defer i_res.Body.Close()
+	instanceId := getInstanceId()
 
-	logger.WithFields(logrus.Fields{
-		"instance-id": instance_id,
-	}).Info("get instance-id")
-
-	// Auth
-	svc := ec2.New(&aws.Config{Region: aws.String(region)})
+	// AWS Auth
+	svc := ec2.New(&aws.Config{Region: aws.String(*region)})
 	logger.Info("auth credential")
 
-	// create instance-id-config
+	// get instance-info
 	params := &ec2.DescribeInstancesInput{
 		InstanceIds: []*string{
-			aws.String(instance_id),
+			aws.String(*instanceId),
 		},
 	}
-
-	// get instance-info
 	resp, err := svc.DescribeInstances(params)
 	if err != nil {
 		logger.Fatal(err)
@@ -95,30 +128,29 @@ func CmdSelf(c *cli.Context) {
 	logger.Info("get instance-info")
 
 	// get all volume-id
-	var volume_ids []string = make([]string, 1)
+	var volumeIds []string = make([]string, 1)
 	for _, res := range resp.Reservations {
 		for _, res := range res.Instances {
 			for index, res := range res.BlockDeviceMappings {
 				if index == 0 {
-					volume_ids[0] = *res.Ebs.VolumeId
+					volumeIds[0] = *res.Ebs.VolumeId
 				} else {
-					volume_ids = append(volume_ids, *res.Ebs.VolumeId)
+					volumeIds = append(volumeIds, *res.Ebs.VolumeId)
 				}
 			}
 		}
 	}
-
 	logger.WithFields(logrus.Fields{
-		"volume-ids": volume_ids,
+		"volume-ids": volumeIds,
 	}).Info("get volume-ids")
 
-	for _, volume_id := range volume_ids {
+	for _, volumeId := range volumeIds {
 		// Description
-		snapshotDescription := "Created by recorder from " + volume_id + " of " + instance_id
+		snapshotDescription := "Created by recorder from " + volumeId + " of " + *instanceId
 
 		// create-snapshot config
 		snapshotParams := &ec2.CreateSnapshotInput{
-			VolumeId:    aws.String(volume_id),
+			VolumeId:    aws.String(volumeId),
 			Description: aws.String(snapshotDescription),
 		}
 
@@ -147,7 +179,7 @@ func CmdSelf(c *cli.Context) {
 			logger.Fatal("create snapshot")
 		}
 		logger.WithFields(logrus.Fields{
-			"InstanceID":  instance_id,
+			"InstanceID":  *instanceId,
 			"VolumeId":    *snapshotResp.VolumeId,
 			"SnapshotId":  *snapshotResp.SnapshotId,
 			"Description": *snapshotResp.Description,
@@ -160,13 +192,7 @@ func CmdSelf(c *cli.Context) {
 				{
 					Name: aws.String("volume-id"),
 					Values: []*string{
-						aws.String(volume_id),
-					},
-				},
-				{
-					Name: aws.String("description"),
-					Values: []*string{
-						aws.String("Created by recorder from"),
+						aws.String(volumeId),
 					},
 				},
 			},
@@ -198,24 +224,28 @@ func CmdSelf(c *cli.Context) {
 		logger.Info("describe snapshot")
 
 		// linkage of snapshot-id and the start-time
-		var snapshotId Snapshots = make([]Snapshot, 1)
-		for index, res := range describeResp.Snapshots {
-			if index == 0 {
-				snapshotId[0].snapshotId = *res.SnapshotId
-				snapshotId[0].startTime = res.StartTime.Unix()
+		var snapshotIds Snapshots = make([]Snapshot, 1)
+		for _, res := range describeResp.Snapshots {
+			if snapshotIds[0].startTime == 0 {
+				if isOwnSnapshot(*res.Description) {
+					snapshotIds[0].snapshotId = *res.SnapshotId
+					snapshotIds[0].startTime = res.StartTime.Unix()
+				}
 			} else {
-				snapshotId = append(snapshotId, Snapshot{*res.SnapshotId, res.StartTime.Unix()})
+				if isOwnSnapshot(*res.Description) {
+					snapshotIds = append(snapshotIds, Snapshot{*res.SnapshotId, res.StartTime.Unix()})
+				}
 			}
 		}
 		// sort asc
-		sort.Sort(snapshotId)
+		sort.Sort(snapshotIds)
 		// If the number of snapshot is life-cycle or more, Delete snapshot.
 		logger.WithFields(logrus.Fields{
 			"lifecycle": c.Int("lifecycle"),
-			"snapshots": len(snapshotId),
+			"snapshots": len(snapshotIds),
 		}).Info("life cycle settings")
-		for len(snapshotId) > c.Int("lifecycle") {
-			for index, snapshots := range snapshotId {
+		for len(snapshotIds) > c.Int("lifecycle") {
+			for index, snapshots := range snapshotIds {
 				if index == 0 {
 					// delete snapshot
 					deleteParam := &ec2.DeleteSnapshotInput{
@@ -253,7 +283,7 @@ func CmdSelf(c *cli.Context) {
 				}
 			}
 			// remove snapshotID
-			snapshotId = append(snapshotId[1:])
+			snapshotIds = append(snapshotIds[1:])
 		}
 	}
 }
