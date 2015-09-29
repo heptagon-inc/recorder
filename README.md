@@ -39,7 +39,7 @@ USAGE:
    recorder [global options] command [command options] [arguments...]
 
 VERSION:
-   0.2.0
+   0.2.1
 
 AUTHOR(S):
    youyo
@@ -59,8 +59,8 @@ GLOBAL OPTIONS:
 Download binary-file.
 
 ```
-$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.2.0/recorder_0.2.0_linux_amd64.zip
-$ unzip recorder_0.2.0_linux_amd64.zip
+$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.2.1/recorder_linux_amd64.zip
+$ unzip recorder_linux_amd64.zip
 $ mv recorder /usr/local/bin/
 $ chmod 755 /usr/local/bin/recorder
 ```
