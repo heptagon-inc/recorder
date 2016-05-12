@@ -4,4 +4,4 @@ tmp/
 *.zip
 Vagrantfile
 .vagrant/
-.env
+.envrc

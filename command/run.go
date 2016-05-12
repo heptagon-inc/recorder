@@ -1,104 +1,20 @@
 package command
 
 import (
-	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
-	"regexp"
 	"sort"
-	"strings"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/codegangsta/cli"
 )
 
-type Snapshot struct {
-	snapshotId string
-	startTime  int64
-}
-
-type Snapshots []Snapshot
-
-type Http struct {
-	Url  string
-	Byte []byte
-}
-
-type Region struct {
-	Http
-	Region string
-}
-
-type InstanceId struct {
-	Http
-	InstanceId string
-}
-
-func (p Snapshots) Len() int {
-	return len(p)
-}
-
-func (p Snapshots) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
-
-func (p Snapshots) Less(i, j int) bool {
-	return p[i].startTime < p[j].startTime
-}
-
-func getRegion() *string {
-	r := Region{}
-	r.Url = "http://169.254.169.254/latest/meta-data/local-hostname"
-	res, err := http.Get(r.Url)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	r.Byte, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	r.Region = strings.Split(string(r.Byte), ".")[1]
-	defer res.Body.Close()
-	logger.WithFields(logrus.Fields{
-		"region": r.Region,
-	}).Info("get region")
-	return &r.Region
-}
-
-func getInstanceId() *string {
-	i := InstanceId{}
-	i.Url = "http://169.254.169.254/latest/meta-data/instance-id"
-	res, err := http.Get(i.Url)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	i.Byte, err = ioutil.ReadAll(res.Body)
-	if err != nil {
-		logger.Fatal(err)
-	}
-	i.InstanceId = string(i.Byte)
-	defer res.Body.Close()
-	logger.WithFields(logrus.Fields{
-		"instance-id": i.InstanceId,
-	}).Info("get instance-id")
-	return &i.InstanceId
-}
-
-func isOwnSnapshot(description string) (b bool) {
-	if m, _ := regexp.MatchString("Created by recorder from.*", description); !m {
-		return false
-	}
-	return true
-}
-
-var logger = logrus.New()
-
-func CmdSelf(c *cli.Context) {
+func CmdRun(c *cli.Context) {
 	// logging
 	log.SetOutput(os.Stderr)
 	if c.Bool("json") {
@@ -106,19 +22,26 @@ func CmdSelf(c *cli.Context) {
 	}
 
 	// get region
-	region := getRegion()
+	region := c.String("region")
 
 	// get instance-id
-	instanceId := getInstanceId()
+	instanceId := c.String("instance-id")
 
 	// AWS Auth
-	svc := ec2.New(session.New(), &aws.Config{Region: aws.String(*region)})
+	profile := c.String("profile")
+	svc := func(p string) *ec2.EC2 {
+		if p == "" {
+			return ec2.New(session.New(), &aws.Config{Region: aws.String(region)})
+		} else {
+			return ec2.New(session.New(), &aws.Config{Credentials: credentials.NewSharedCredentials("", p), Region: aws.String(region)})
+		}
+	}(profile)
 	logger.Info("auth credential")
 
 	// get instance-info
 	params := &ec2.DescribeInstancesInput{
 		InstanceIds: []*string{
-			aws.String(*instanceId),
+			aws.String(instanceId),
 		},
 	}
 	resp, err := svc.DescribeInstances(params)
@@ -146,7 +69,7 @@ func CmdSelf(c *cli.Context) {
 
 	for _, volumeId := range volumeIds {
 		// Description
-		snapshotDescription := "Created by recorder from " + volumeId + " of " + *instanceId
+		snapshotDescription := "Created by recorder from " + volumeId + " of " + instanceId
 
 		// create-snapshot config
 		snapshotParams := &ec2.CreateSnapshotInput{
@@ -179,7 +102,7 @@ func CmdSelf(c *cli.Context) {
 			logger.Fatal("create snapshot")
 		}
 		logger.WithFields(logrus.Fields{
-			"InstanceID":  *instanceId,
+			"InstanceID":  instanceId,
 			"VolumeId":    *snapshotResp.VolumeId,
 			"SnapshotId":  *snapshotResp.SnapshotId,
 			"Description": *snapshotResp.Description,
