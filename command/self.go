@@ -5,17 +5,17 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
-	"regexp"
 
 	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/codegangsta/cli"
 )
-
 
 type Snapshot struct {
 	snapshotId string
@@ -25,7 +25,7 @@ type Snapshot struct {
 type Snapshots []Snapshot
 
 type Http struct {
-	Url string
+	Url  string
 	Byte []byte
 }
 
@@ -112,7 +112,7 @@ func CmdSelf(c *cli.Context) {
 	instanceId := getInstanceId()
 
 	// AWS Auth
-	svc := ec2.New(&aws.Config{Region: aws.String(*region)})
+	svc := ec2.New(session.New(), &aws.Config{Region: aws.String(*region)})
 	logger.Info("auth credential")
 
 	// get instance-info
