@@ -15,7 +15,7 @@ aws_access_key_id = XXXXXXXXXX
 aws_secret_access_key = XXXXXXXXXXXXXXX
 ```
 
-Run the `recorder self`
+Run the `recorder self` or `recorder run`
 
 ```
 $ recorder self -h
@@ -31,6 +31,22 @@ OPTIONS:
 ```
 
 ```
+$ recorder run -h
+NAME:
+   run - Snapshotting for specific instance's volume.
+
+USAGE:
+   command run [command options] [arguments...]
+
+OPTIONS:
+   --profile, -p 			Set AWS-Credentials profile name.
+   --instance-id, -i 			Set InstanceId.
+   --region, -r "ap-northeast-1"	Set Region.
+   --lifecycle, -l "5"			Set the number of life cycle for snapshot.
+   --json, -j				Log Format json.
+```
+
+```
 $ recorder -h
 NAME:
    recorder - Create a snapshot of the Amazon EC2.
@@ -39,13 +55,14 @@ USAGE:
    recorder [global options] command [command options] [arguments...]
 
 VERSION:
-   0.2.1
+   0.2.2
 
 AUTHOR(S):
    youyo
 
 COMMANDS:
    self		Snapshotting for own volume.
+   run		Snapshotting for specific instance's volume.
    help, h	Shows a list of commands or help for one command
 
 GLOBAL OPTIONS:
@@ -59,7 +76,7 @@ GLOBAL OPTIONS:
 Download binary-file.
 
 ```
-$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.2.1/recorder_linux_amd64.zip
+$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.2.2/recorder_linux_amd64.zip
 $ unzip recorder_linux_amd64.zip
 $ mv recorder /usr/local/bin/
 $ chmod 755 /usr/local/bin/recorder
