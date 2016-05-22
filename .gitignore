@@ -5,3 +5,5 @@ tmp/
 Vagrantfile
 .vagrant/
 .envrc
+dist/
+vendor/

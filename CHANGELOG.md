@@ -1,10 +1,10 @@
-## 0.2.1 (2015-09-29)
+## 0.3.0 (2016-05-22)
 
-Bugfix.
+Re-Create all.
 
 ### Added
 
-- Add Fundamental features
+- Nothing
 
 ### Deprecated
 
@@ -16,4 +16,4 @@ Bugfix.
 
 ### Fixed
 
-- Fixed a bug that fail to snapshot deleted when ami exists.
+- Nothing
