@@ -1,9 +1,9 @@
 machine:
   timezone: Asia/Tokyo
   environment:
-    USERNAME='youyo'
-    CIRCLE_PROJECT_REPONAME='recorder'
-    GO15VENDOREXPERIMENT=1
+    USERNAME: 'youyo'
+    CIRCLE_PROJECT_REPONAME: 'recorder'
+    GO15VENDOREXPERIMENT: 1
 
 dependencies:
   pre:
@@ -12,6 +12,7 @@ dependencies:
       go get github.com/tcnksm/ghr
       go get github.com/Masterminds/glide
       go install github.com/Masterminds/glide
+      glide up
 
 deployment:
   release:
