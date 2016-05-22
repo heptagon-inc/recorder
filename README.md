@@ -1,5 +1,7 @@
 # recorder
 
+[![CircleCI](https://circleci.com/gh/heptagon-inc/recorder.svg?style=svg)](https://circleci.com/gh/heptagon-inc/recorder)
+
 ## Description
 
 Create a snapshot of the Amazon EC2.
