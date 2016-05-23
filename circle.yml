@@ -9,10 +9,10 @@ machine:
     GOROOT: "/home/ubuntu/go"
     PATH: "/home/ubuntu/go/bin:$PATH"
   post:
-    - sudo mkdir -p download
-    - test -e download/$GODIST || curl -o download/$GODIST https://storage.googleapis.com/golang/$GODIST
+    - sudo mkdir -p ~/download
+    - sudo test -e ~/download/$GODIST || sudo curl -o ~/download/$GODIST https://storage.googleapis.com/golang/$GODIST
     - sudo rm -rf /usr/local/go
-    - sudo tar -C /usr/local -xzf download/$GODIST
+    - sudo tar -C /usr/local -xzf ~/download/$GODIST
 
 dependencies:
   cache_directories:
