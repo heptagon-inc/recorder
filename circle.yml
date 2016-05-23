@@ -7,15 +7,16 @@ machine:
     GOVERSION: 1.6.1
     GODIST: "go$GOVERSION.linux-amd64.tar.gz"
   post:
-    - sudo mkdir -p ~/download
-    - sudo test -e ~/download/$GODIST || sudo curl -o ~/download/$GODIST https://storage.googleapis.com/golang/$GODIST
-    - sudo rm -rf /usr/local/go
-    - sudo tar -C /usr/local -xzf ~/download/$GODIST
-    - rm -rf $GOPATH/src/*
-    - mkdir -p $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/
-    - cd $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME
-    - mv $HOME/$CIRCLE_PROJECT_REPONAME .
-    - cd $CIRCLE_PROJECT_REPONAME/
+    - |
+      sudo mkdir -p ~/download
+      sudo test -e ~/download/$GODIST || sudo curl -o ~/download/$GODIST https://storage.googleapis.com/golang/$GODIST
+      sudo rm -rf /usr/local/go
+      sudo tar -C /usr/local -xzf ~/download/$GODIST
+      rm -rf $GOPATH/src/*
+      mkdir -p $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/
+      cd $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME
+      mv $HOME/$CIRCLE_PROJECT_REPONAME .
+      cd $CIRCLE_PROJECT_REPONAME/
 
 dependencies:
   cache_directories:
