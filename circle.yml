@@ -14,9 +14,7 @@ machine:
       sudo tar -C /usr/local -xzf ~/download/$GODIST
       rm -rf $GOPATH/src/*
       mkdir -p $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/
-      cd $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME
-      mv $HOME/$CIRCLE_PROJECT_REPONAME .
-      cd $CIRCLE_PROJECT_REPONAME/
+      cp -a $HOME/$CIRCLE_PROJECT_REPONAME $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/
 
 dependencies:
   cache_directories:
@@ -44,4 +42,4 @@ deployment:
       - |
         cd $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/
         gox --osarch "linux/amd64" --output "dist/{{.Dir}}_{{.OS}}_{{.Arch}}"
-        ghr -t ${GITHUB_TOKEN} -u $USERNAME -r $CIRCLE_PROJECT_REPONAME --replace `cat version.go | grep -w 'const Version string' | awk -F '"' '{print "v"$2}'` dist/
+        ghr -t ${GITHUB_TOKEN} -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace `cat version.go | grep -w 'const Version string' | awk -F '"' '{print "v"$2}'` dist/
