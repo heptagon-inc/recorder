@@ -2,10 +2,11 @@ machine:
   timezone: Asia/Tokyo
   environment:
     USERNAME: 'youyo'
-    CIRCLE_PROJECT_REPONAME: 'recorder'
     GO15VENDOREXPERIMENT: 1
     GOVERSION: 1.6.1
     GODIST: "go$GOVERSION.linux-amd64.tar.gz"
+    WORKDIR: "$HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME"
+    REPODIR: "${WORKDIR}/#{CIRCLE_PROJECT_REPONAME}"
   post:
     - |
       sudo mkdir -p ~/download
@@ -13,8 +14,8 @@ machine:
       sudo rm -rf /usr/local/go
       sudo tar -C /usr/local -xzf ~/download/$GODIST
       sudo rm -rf $GOPATH/src/*
-      sudo mkdir -p $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/
-      sudo cp -a $HOME/$CIRCLE_PROJECT_REPONAME $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/
+      sudo mkdir -p ${WORKDIR}
+      sudo cp -a $HOME/$CIRCLE_PROJECT_REPONAME $WORKDIR/
 
 dependencies:
   cache_directories:
@@ -26,13 +27,13 @@ dependencies:
       go get -v github.com/Masterminds/glide
   override:
     - |
-      cd $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/
+      cd ${REPODIR}
       glide up
 
 test:
   override:
     - |
-      cd $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/
+      cd $REPODIR
       go test $(glide novendor)
 
 deployment:
@@ -40,6 +41,7 @@ deployment:
     branch: master
     commands:
       - |
-        cd $HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/
-        gox --osarch "linux/amd64" --output "dist/{{.Dir}}_{{.OS}}_{{.Arch}}"
-        ghr -t ${GITHUB_TOKEN} -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace `cat version.go | grep -w 'const Version string' | awk -F '"' '{print "v"$2}'` dist/
+        cd ${REPODIR}
+        gox --osarch "linux/amd64" --output "${CIRCLE_PROJECT_REPONAME}"
+        zip ${CIRCLE_PROJECT_REPONAME}_linux_amd64.zip ${CIRCLE_PROJECT_REPONAME}
+        ghr -t ${GITHUB_TOKEN} -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace `cat version.go | grep -w 'const Version string' | awk -F '"' '{print "v"$2}'` ${CIRCLE_PROJECT_REPONAME}_linux_amd64.zip
