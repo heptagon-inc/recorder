@@ -6,7 +6,7 @@ machine:
     GOVERSION: 1.6.1
     GODIST: "go$GOVERSION.linux-amd64.tar.gz"
     WORKDIR: "$HOME/.go_workspace/src/github.com/$CIRCLE_PROJECT_USERNAME"
-    REPODIR: "${WORKDIR}/#{CIRCLE_PROJECT_REPONAME}"
+    REPODIR: "${WORKDIR}/${CIRCLE_PROJECT_REPONAME}"
   post:
     - |
       sudo mkdir -p ~/download
