@@ -4,8 +4,20 @@ machine:
     USERNAME: 'youyo'
     CIRCLE_PROJECT_REPONAME: 'recorder'
     GO15VENDOREXPERIMENT: 1
+    GOVERSION: 1.6.1
+    GODIST: "go$GOVERSION.linux-amd64.tar.gz"
+    GOROOT: "/home/ubuntu/go"
+    PATH: "/home/ubuntu/go/bin:$PATH"
+  post:
+    - |
+      mkdir -p download
+      test -e download/$GODIST || curl -o download/$GODIST https://storage.googleapis.com/golang/$GODIST
+      sudo rm -rf /usr/local/go
+      tar -C /usr/local -xzf download/$GODIST
 
 dependencies:
+  cache_directories:
+    - ~/download
   pre:
     - |
       go get -v github.com/mitchellh/gox
