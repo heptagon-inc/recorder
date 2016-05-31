@@ -1,6 +1,6 @@
-## 0.3.0 (2016-05-22)
+## 0.3.1 (2016-05-31)
 
-Re-Create all.
+Update.
 
 ### Added
 
@@ -16,4 +16,4 @@ Re-Create all.
 
 ### Fixed
 
-- Nothing
+- https://github.com/urfave/cli/blob/master/CHANGELOG.md#deprecated-cli-app-action-signature

@@ -28,7 +28,7 @@ type Snapshot struct {
 
 type Snapshots []Snapshot
 
-func CmdEbs(c *cli.Context) {
+func CmdEbs(c *cli.Context) error {
 	// logging
 	log.SetOutput(os.Stderr)
 
@@ -115,6 +115,7 @@ func CmdEbs(c *cli.Context) {
 		// If the number of snapshot is life-cycle or more, Delete snapshot.
 		svc.deleteSnapshots(o.lifeCycle, snapshotIds)
 	}
+	return nil
 }
 
 func (p Snapshots) Len() int {

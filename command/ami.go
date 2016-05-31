@@ -31,7 +31,7 @@ type image struct {
 
 type images []image
 
-func CmdAmi(c *cli.Context) {
+func CmdAmi(c *cli.Context) error {
 	// logging
 	log.SetOutput(os.Stderr)
 
@@ -99,6 +99,8 @@ func CmdAmi(c *cli.Context) {
 	imageIds := sortImages(images)
 	// delete ami
 	svc.deleteImages(o.lifecycle, imageIds)
+
+	return nil
 }
 
 func (p images) Len() int {
