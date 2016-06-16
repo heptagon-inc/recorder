@@ -8,7 +8,21 @@ import (
 	"github.com/heptagon-inc/recorder/command"
 )
 
-var GlobalFlags = []cli.Flag{}
+var GlobalFlags = []cli.Flag{
+	cli.StringFlag{
+		EnvVar: "ENV_PROFILE",
+		Name:   "profile, p",
+		Usage:  "Set AWS-Credentials profile name.",
+	},
+	cli.BoolFlag{
+		Name:  "json, j",
+		Usage: "Log Format json.",
+	},
+	cli.BoolFlag{
+		Name:  "debug",
+		Usage: "Set LogLevel Debug.",
+	},
+}
 
 var Commands = []cli.Command{
 
@@ -20,10 +34,6 @@ var Commands = []cli.Command{
 			cli.BoolFlag{
 				Name:  "self, s",
 				Usage: "Snapshotting for own volume.",
-			},
-			cli.StringFlag{
-				Name:  "profile, p",
-				Usage: "Set AWS-Credentials profile name.",
 			},
 			cli.StringFlag{
 				Name:  "instance-id, i",
@@ -40,14 +50,6 @@ var Commands = []cli.Command{
 				Value: 5,
 				Usage: "Set the number of life cycle for snapshot.",
 			},
-			cli.BoolFlag{
-				Name:  "json, j",
-				Usage: "Log Format json.",
-			},
-			cli.BoolFlag{
-				Name:  "debug",
-				Usage: "Set LogLevel Debug.",
-			},
 		},
 	},
 	{
@@ -58,10 +60,6 @@ var Commands = []cli.Command{
 			cli.BoolFlag{
 				Name:  "self, s",
 				Usage: "Creating Image for own.",
-			},
-			cli.StringFlag{
-				Name:  "profile, p",
-				Usage: "Set AWS-Credentials profile name.",
 			},
 			cli.StringFlag{
 				Name:  "instance-id, i",
@@ -81,14 +79,6 @@ var Commands = []cli.Command{
 			cli.BoolFlag{
 				Name:  "reboot",
 				Usage: "Reboot instance when create image.",
-			},
-			cli.BoolFlag{
-				Name:  "json, j",
-				Usage: "Log Format json.",
-			},
-			cli.BoolFlag{
-				Name:  "debug",
-				Usage: "Set LogLevel Debug.",
 			},
 		},
 	},
