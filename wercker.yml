@@ -40,4 +40,4 @@ deploy:
     - script:
       name: Release
       code: |-
-        ghr -t ${GITHUB_TOKEN} -u youyo -r recorder --replace `cat version.txt` recorder_linux_amd64.zip
+        ghr -t ${GITHUB_TOKEN} -u heptagon-inc -r recorder --replace `cat version.txt` recorder_linux_amd64.zip
