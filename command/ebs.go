@@ -34,13 +34,13 @@ func CmdEbs(c *cli.Context) error {
 
 	// options
 	o := ebsOptions{
+		profile:    c.GlobalString("profile"),
+		json:       c.GlobalBool("json"),
+		logLevel:   c.GlobalBool("debug"),
 		self:       c.Bool("self"),
-		profile:    c.String("profile"),
 		instanceId: c.String("instance-id"),
 		region:     c.String("region"),
 		lifeCycle:  c.Int("lifecycle"),
-		json:       c.Bool("json"),
-		logLevel:   c.Bool("debug"),
 	}
 
 	// set log format
