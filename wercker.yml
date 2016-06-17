@@ -29,7 +29,7 @@ build:
       name: Build
       code: |-
         GOOS=linux GOARCH=amd64 go build
-        zip recorder_linux_amd64.zip recorder
+        zip ${WERCKER_OUTPUT_DIR}/recorder_linux_amd64.zip recorder
 
 deploy:
   box:
