@@ -31,7 +31,7 @@ build:
         GOOS=linux GOARCH=amd64 go build
         zip ${WERCKER_OUTPUT_DIR}/recorder_linux_amd64.zip recorder
 
-dev:
+deploy:
   box:
     id: youyo/recorder:release
     cmd: /bin/sh
