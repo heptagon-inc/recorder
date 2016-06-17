@@ -22,6 +22,10 @@ build:
     - wercker/setup-go-workspace:
       package-dir: github.com/heptagon-inc/recorder
     - script:
+      name: Update packages
+      code: |-
+        glide up
+    - script:
       name: Build
       code: |-
         GOOS=linux GOARCH=amd64 go build
