@@ -1,0 +1,38 @@
+test:
+  box:
+    id: youyo/recorder:test
+    cmd: /bin/sh
+  steps:
+    - wercker/setup-go-workspace:
+      package-dir: github.com/heptagon-inc/recorder
+    - script:
+      name: Update packages
+      code: |-
+        glide up
+    - script:
+      name: Tests
+      code: |-
+        go test $(glide novendor)
+
+build:
+  box:
+    id: youyo/recorder:build
+    cmd: /bin/sh
+  steps:
+    - wercker/setup-go-workspace:
+      package-dir: github.com/heptagon-inc/recorder
+    - script:
+      name: Build
+      code: |-
+        GOOS=linux GOARCH=amd64 go build
+        zip recorder_linux_amd64.zip recorder
+
+deploy:
+  box:
+    id: youyo/recorder:release
+    cmd: /bin/sh
+  steps:
+    - script:
+      name: Release
+      code: |-
+        ghr -t ${GITHUB_TOKEN} -u youyo -r recorder --replace `cat version.go | grep -w 'const Version string' | awk -F '"' '{print "v"$2}'` recorder_linux_amd64.zip

@@ -6,4 +6,6 @@ Vagrantfile
 .vagrant/
 .envrc
 dist/
-vendor/
+_builds/
+_projects/
+_steps/
