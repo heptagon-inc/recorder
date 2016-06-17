@@ -31,11 +31,16 @@ build:
         GOOS=linux GOARCH=amd64 go build
         zip ${WERCKER_OUTPUT_DIR}/recorder_linux_amd64.zip recorder
 
-deploy:
+dev:
   box:
     id: youyo/recorder:release
     cmd: /bin/sh
   steps:
+    - script:
+      name: test
+      code: |-
+        ls -ahl
+        ls -ahl /pipeline/source
     - script:
       name: Release
       code: |-
