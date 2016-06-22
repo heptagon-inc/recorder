@@ -30,7 +30,7 @@ build:
       code: |-
         GOOS=linux GOARCH=amd64 go build
         zip ${WERCKER_OUTPUT_DIR}/recorder_linux_amd64.zip recorder
-        cat version.go | grep -w 'const Version string' | awk -F '"' '{print "v"$2}' > ${WERCKER_OUTPUT_DIR}/version.txt
+        grep -w 'const Version string' version.go | awk -F '"' '{print "v"$2}' > ${WERCKER_OUTPUT_DIR}/version.txt
 
 deploy:
   box:
