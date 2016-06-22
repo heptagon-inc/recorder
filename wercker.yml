@@ -29,8 +29,7 @@ build:
       name: Build
       code: |-
         GOOS=linux GOARCH=amd64 go build
-        zip ${WERCKER_OUTPUT_DIR}/recorder_linux_amd64.zip recorder
-        cat version.go | grep -w 'const Version string' | awk -F '"' '{print "v"$2}' > ${WERCKER_OUTPUT_DIR}/version.txt
+        zip recorder_linux_amd64.zip recorder
 
 deploy:
   box:
@@ -40,4 +39,4 @@ deploy:
     - script:
       name: Release
       code: |-
-        ghr -t ${GITHUB_TOKEN} -u heptagon-inc -r recorder --replace `cat version.txt` recorder_linux_amd64.zip
+        ghr -t ${GITHUB_TOKEN} -u heptagon-inc -r recorder --replace `grep -w 'const Version string' version.go | awk -F '"' '{print "v"$2}'` recorder_linux_amd64.zip
