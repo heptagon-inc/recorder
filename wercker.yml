@@ -17,7 +17,7 @@ test:
 build:
   box:
     id: youyo/recorder:build
-    cmd: /bin/sh
+    cmd: /bin/bash
   steps:
     - wercker/setup-go-workspace:
       package-dir: github.com/heptagon-inc/recorder
