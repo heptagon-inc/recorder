@@ -56,56 +56,52 @@ USAGE:
    recorder [global options] command [command options] [arguments...]
 
 VERSION:
-   0.3.0
+   0.3.3
 
 AUTHOR(S):
    youyo
 
 COMMANDS:
-   ebs		Snapshotting for specific instance's volume.
-   ami		Creating Image for specific instance
-   help, h	Shows a list of commands or help for one command
+     ebs  Snapshotting for specific instance's volume.
+     ami  Creating Image for specific instance
 
 GLOBAL OPTIONS:
-   --help, -h		show help
-   --version, -v	print the version
+   --profile value, -p value  Set AWS-Credentials profile name. [$ENV_PROFILE]
+   --json, -j                 Log Format json.
+   --debug                    Set LogLevel Debug.
+   --help, -h                 show help
+   --version, -v              print the version
 ```
 
 ```
 $ recorder ebs -h
 NAME:
-   ebs - Snapshotting for specific instance's volume.
+   recorder ebs - Snapshotting for specific instance's volume.
 
 USAGE:
-   command ebs [command options] [arguments...]
+   recorder ebs [command options] [arguments...]
 
 OPTIONS:
-   --self, -s				Snapshotting for own volume.
-   --profile, -p 			Set AWS-Credentials profile name.
-   --instance-id, -i "i-xxxxxxx"	Set InstanceId. If '--self' option is set, this is ignored.
-   --region, -r "ap-northeast-1"	Set Region. If '--self' option is set, this is ignored.
-   --lifecycle, -l "5"			Set the number of life cycle for snapshot.
-   --json, -j				Log Format json.
-   --debug				Set LogLevel Debug.
+   --self, -s                     Snapshotting for own volume.
+   --instance-id value, -i value  Set InstanceId. If '--self' option is set, this is ignored. (default: "i-xxxxxxx")
+   --region value, -r value       Set Region. If '--self' option is set, this is ignored. (default: "ap-northeast-1")
+   --lifecycle value, -l value    Set the number of life cycle for snapshot. (default: 5)
 ```
 
 ```
 $ recorder ami -h
 NAME:
-   ami - Creating Image for specific instance
+   recorder ami - Creating Image for specific instance
 
 USAGE:
-   command ami [command options] [arguments...]
+   recorder ami [command options] [arguments...]
 
 OPTIONS:
-   --self, -s				Creating Image for own.
-   --profile, -p 			Set AWS-Credentials profile name.
-   --instance-id, -i "i-xxxxxxx"	Set InstanceId. If '--self' option is set, this is ignored.
-   --region, -r "ap-northeast-1"	Set Region. If '--self' option is set, this is ignored.
-   --lifecycle, -l "5"			Set the number of life cycle for AMI
-   --reboot				Reboot instance when create image.
-   --json, -j				Log Format json.
-   --debug				Set LogLevel Debug.
+   --self, -s                     Creating Image for own.
+   --instance-id value, -i value  Set InstanceId. If '--self' option is set, this is ignored. (default: "i-xxxxxxx")
+   --region value, -r value       Set Region. If '--self' option is set, this is ignored. (default: "ap-northeast-1")
+   --lifecycle value, -l value    Set the number of life cycle for AMI (default: 5)
+   --reboot                       Reboot instance when create image.
 ```
 
 
@@ -114,7 +110,7 @@ OPTIONS:
 Download binary-file.
 
 ```
-$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.3.0/recorder_linux_amd64.zip
+$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.3.3/recorder_linux_amd64.zip
 $ unzip recorder_linux_amd64.zip
 $ mv recorder /usr/local/bin/
 $ chmod 755 /usr/local/bin/recorder
