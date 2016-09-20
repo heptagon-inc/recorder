@@ -11,3 +11,4 @@ _projects/
 _steps/
 vendor/*
 !vendor/vendor.json
+.wercker/
