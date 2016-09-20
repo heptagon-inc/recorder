@@ -15,10 +15,6 @@ var GlobalFlags = []cli.Flag{
 		Usage:  "Set AWS-Credentials profile name.",
 	},
 	cli.BoolFlag{
-		Name:  "json, j",
-		Usage: "Log Format json.",
-	},
-	cli.BoolFlag{
 		Name:  "debug",
 		Usage: "Set LogLevel Debug.",
 	},
@@ -70,11 +66,6 @@ var Commands = []cli.Command{
 				Name:  "region, r",
 				Value: "ap-northeast-1",
 				Usage: "Set Region. If '--self' option is set, this is ignored.",
-			},
-			cli.IntFlag{
-				Name:  "lifecycle, l",
-				Value: 5,
-				Usage: "Set the number of life cycle for AMI",
 			},
 			cli.BoolFlag{
 				Name:  "reboot",
