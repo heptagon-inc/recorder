@@ -13,7 +13,7 @@ func main() {
 	app.Version = Version
 	app.Author = "youyo"
 	app.Email = ""
-	app.Usage = "Create a snapshot of the Amazon EC2."
+	app.Usage = "Create EBS-Snapshot and AMI of the Amazon EC2."
 
 	app.Flags = GlobalFlags
 	app.Commands = Commands

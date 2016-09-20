@@ -8,11 +8,11 @@ test:
     - script:
       name: Update packages
       code: |-
-        glide up
+        govendor fetch +outside
     - script:
       name: Tests
       code: |-
-        go test $(glide novendor)
+        govendor test +local
 
 build:
   box:
@@ -24,7 +24,7 @@ build:
     - script:
       name: Update packages
       code: |-
-        glide up
+        govendor fetch +outside
     - script:
       name: Build
       code: |-
