@@ -9,3 +9,5 @@ dist/
 _builds/
 _projects/
 _steps/
+vendor/
+!vendor/vendor.json
