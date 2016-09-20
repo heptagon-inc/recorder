@@ -3,219 +3,77 @@ package command
 import (
 	"io/ioutil"
 	"net/http"
-	"regexp"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/simplebackup/ec2"
+	"github.com/visionmedia/go-cli-log"
 )
 
-var logger = logrus.New()
-
-type metadata struct {
-	region           string
-	availabilityZone string
-	instanceId       string
-	nameTag          string
+func newLogging(logLevelDebug bool) {
+	if logLevelDebug {
+		log.Verbose = true
+	}
 }
 
-type svc struct {
-	ec2      *ec2.EC2
-	instance metadata
-	profile  string
-}
-
-func (svc svc) auth(p string) *ec2.EC2 {
-	logger.WithFields(logrus.Fields{"Action": "auth"}).Debug()
-	svc.profile = p
-	logger.WithFields(logrus.Fields{
-		"Action":  "auth",
-		"profile": svc.profile,
-	}).Debug()
-	c := func(p string) aws.Config {
-		if p == "" {
-			return aws.Config{
-				Region: aws.String(svc.instance.region),
-			}
+func setInstanceMetadata(self bool, region, instanceID string) (string, string) {
+	log.Debug("setInstanceMetadata", "args: [self: %t, region: %s, instanceID: %s]", self, region, instanceID)
+	return func(self bool) (string, string) {
+		if self {
+			r := getRegion()
+			i := getInstanceID()
+			log.Debug("setInstanceMetadata", "response: [region: %s, instance-id: %s]", r, i)
+			return r, i
 		} else {
-			return aws.Config{
-				Credentials: credentials.NewSharedCredentials("", p),
-				Region:      aws.String(svc.instance.region),
-			}
+			log.Debug("setInstanceMetadata", "response: [region: %s, instance-id: %s]", region, instanceID)
+			return region, instanceID
 		}
-	}(svc.profile)
-	svc.ec2 = ec2.New(session.New(), &c)
-	return svc.ec2
+	}(self)
 }
 
-func (m metadata) getMetadata(s string) *string {
-	logger.WithFields(logrus.Fields{"Action": "getMetadata"}).Debug()
-	url := "http://169.254.169.254/latest/meta-data/" + s
+func getMetadata(resource string) string {
+	log.Debug("getMetadata", "args: [resource: %s]", resource)
+	url := "http://169.254.169.254/latest/meta-data/" + resource
 	res, err := http.Get(url)
+	defer res.Body.Close()
 	if err != nil {
-		logger.WithFields(logrus.Fields{
-			"Action": "getMetadata.httpGet",
-			"res":    res,
-			"url":    url,
-		}).Fatal(err)
+		log.Error(err)
+		panic(err)
 	}
 	byteSlice, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		logger.WithFields(logrus.Fields{
-			"Action":    "getMetadata.ioutil.ReadAll",
-			"byteSlice": byteSlice,
-			"res.Body":  res.Body,
-		}).Fatal(err)
+		log.Error(err)
+		panic(err)
 	}
-	defer res.Body.Close()
 	response := string(byteSlice)
-	logger.WithFields(logrus.Fields{
-		"Action":   "getMetadata",
-		"url":      url,
-		"response": response,
-	}).Debug()
-	return &response
+	log.Debug("getMetadata", "response: [response: %s]", response)
+	return response
 }
 
-func (m metadata) getRegion() *string {
-	logger.WithFields(logrus.Fields{"Action": "getRegion"}).Debug()
-	m.availabilityZone = *m.getMetadata("placement/availability-zone")
-	m.region = string(m.availabilityZone[:len(m.availabilityZone)-1])
-	logger.WithFields(logrus.Fields{
-		"Action": "getRegion",
-		"region": m.region,
-	}).Debug()
-	return &m.region
+func getRegion() string {
+	log.Debug("getRegion", "args: []")
+	availabilityZone := getMetadata("placement/availability-zone")
+	region := azToRegion(availabilityZone)
+	log.Debug("getRegion", "response: [region: %s]", region)
+	return region
 }
 
-func (m metadata) getInstanceId() *string {
-	logger.WithFields(logrus.Fields{"Action": "getInstanceId"}).Debug()
-	m.instanceId = *m.getMetadata("instance-id")
-	logger.WithFields(logrus.Fields{
-		"Action":      "getInstanceId",
-		"instance-id": m.instanceId,
-	}).Debug()
-	return &m.instanceId
+func azToRegion(az string) string {
+	log.Debug("azToRegion", "args: [AZ: %s]", az)
+	region := string(az[:len(az)-1])
+	log.Debug("azToRegion", "response: [region: %s]", region)
+	return region
 }
 
-func (svc svc) describeInstances(i string) *ec2.DescribeInstancesOutput {
-	logger.WithFields(logrus.Fields{"Action": "describeInstances"}).Debug()
-	params := &ec2.DescribeInstancesInput{
-		InstanceIds: []*string{
-			aws.String(i),
-		},
-	}
-	resp, err := svc.ec2.DescribeInstances(params)
-	if err != nil {
-		logger.WithFields(logrus.Fields{
-			"Action":      "describeInstances",
-			"instance-id": i,
-			"params":      params,
-			"resp":        resp,
-		}).Fatal(err)
-	}
-	logger.WithFields(logrus.Fields{
-		"Action":      "describeInstances",
-		"instance-id": i,
-		"resp":        resp,
-	}).Debug()
-	return resp
+func getInstanceID() string {
+	log.Debug("getInstanceID", "args: []")
+	instanceID := getMetadata("instance-id")
+	log.Debug("getInstanceID", "response: [instanceID: %s]", instanceID)
+	return instanceID
 }
 
-func (svc svc) hasNameTag(resp *ec2.DescribeInstancesOutput) (bool, string) {
-	logger.WithFields(logrus.Fields{"Action": "hasNameTag"}).Debug()
-	for _, res := range resp.Reservations {
-		for _, res := range res.Instances {
-			for _, res := range res.Tags {
-				if *res.Key == "Name" && *res.Value != "" {
-					logger.WithFields(logrus.Fields{
-						"Action": "hasNameTag",
-						"bool":   true,
-						"value":  *res.Value,
-					}).Debug()
-					return true, *res.Value
-				}
-			}
-		}
-	}
-	logger.WithFields(logrus.Fields{
-		"Action": "hasNameTag",
-		"bool":   false,
-		"value":  "",
-	}).Debug()
-	return false, ""
-}
-
-func (svc svc) createNameTag(snapshotId, message string) {
-	logger.WithFields(logrus.Fields{"Action": "createNameTag"}).Debug()
-	params := &ec2.CreateTagsInput{
-		Resources: []*string{
-			aws.String(snapshotId),
-		},
-		Tags: []*ec2.Tag{
-			{
-				Key:   aws.String("Name"),
-				Value: aws.String(message),
-			},
-		},
-	}
-	_, err := svc.ec2.CreateTags(params)
-	if err != nil {
-		logger.WithFields(logrus.Fields{
-			"Action":     "createNameTag",
-			"snapshotId": snapshotId,
-			"message":    message,
-		}).Fatal(err)
-	}
-	logger.WithFields(logrus.Fields{
-		"Action":     "createNameTag",
-		"snapshotId": snapshotId,
-		"message":    message,
-	}).Debug()
-}
-
-func errorLogging(err error, m string) {
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			logger.WithFields(logrus.Fields{
-				"awsErr.Code":    awsErr.Code(),
-				"awsErr.Message": awsErr.Message(),
-				"awsErr.OrigErr": awsErr.OrigErr(),
-			}).Error(m)
-			if reqErr, ok := err.(awserr.RequestFailure); ok {
-				logger.WithFields(logrus.Fields{
-					"reqErr.Code":       reqErr.Code(),
-					"reqErr.Message":    reqErr.Message(),
-					"reqErr.StatusCode": reqErr.StatusCode(),
-					"reqErr.RequestID":  reqErr.RequestID(),
-				}).Error(m)
-			}
-		} else {
-			logger.WithFields(logrus.Fields{
-				"err.Error": err.Error(),
-			}).Error(m)
-		}
-		logger.Fatal(m)
-	}
-}
-
-func isOwn(description string) (b bool) {
-	logger.WithFields(logrus.Fields{"Action": "isOwn"}).Debug()
-	if m, _ := regexp.MatchString("Created by recorder from.*", description); !m {
-		logger.WithFields(logrus.Fields{
-			"Action":      "isOwn",
-			"description": description,
-			"bool":        "false",
-		}).Debug()
-		return false
-	}
-	logger.WithFields(logrus.Fields{
-		"Action":      "isOwn",
-		"description": description,
-		"response":    true,
-	}).Debug()
-	return true
+func newConfig(region string) *aws.Config {
+	log.Debug("newConfig", "args: [region: %s]", region)
+	c := simplebackupec2.NewConfig().WithRegion(region)
+	log.Debug("newConfig", "response: [aws.Config: %s]", c)
+	return c
 }

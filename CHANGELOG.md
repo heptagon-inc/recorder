@@ -1,6 +1,6 @@
-## 0.3.1 (2016-05-31)
+## 0.4.0 (2016-09-06)
 
-Update.
+Change use library, [github.com/simplebackup/ec2](https://github.com/simplebackup/ec2).
 
 ### Added
 
@@ -16,4 +16,4 @@ Update.
 
 ### Fixed
 
-- https://github.com/urfave/cli/blob/master/CHANGELOG.md#deprecated-cli-app-action-signature
+- Nothing

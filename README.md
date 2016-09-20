@@ -4,9 +4,68 @@
 
 ## Description
 
-Create a snapshot of the Amazon EC2.
+Create EBS-Snapshot and AMI of the Amazon EC2.
 
-## Usage
+# Usage
+
+Execute `recorder ebs` or `recorder ami` .
+
+```
+$ recorder ebs -h
+NAME:
+   recorder ebs - Snapshotting for specific instance's volume.
+
+USAGE:
+   recorder ebs [command options] [arguments...]
+
+OPTIONS:
+   --self, -s                     Snapshotting for own volume.
+   --instance-id value, -i value  Set InstanceId. If '--self' option is set, this is ignored.
+   --region value, -r value       Set Region. If '--self' option is set, this is ignored. (default: "ap-northeast-1")
+   --lifecycle value, -l value    Set the number of life cycle for snapshot. (default: 5)
+```
+
+```
+$ recorder ami -h
+NAME:
+   recorder ami - Creating Image for specific instance
+
+USAGE:
+   recorder ami [command options] [arguments...]
+
+OPTIONS:
+   --self, -s                     Creating Image for own.
+   --instance-id value, -i value  Set InstanceId. If '--self' option is set, this is ignored. (default: "i-xxxxxxx")
+   --region value, -r value       Set Region. If '--self' option is set, this is ignored. (default: "ap-northeast-1")
+   --reboot                       Reboot instance when create image. (Default-value: false, NOT-Reboot.)
+```
+
+If you wish execute another profile, run `$ AWS_DEFAULT_PROFILE='another_profile_name' recorder...` .
+
+## Install
+
+- Download binary-file.
+
+```
+$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.4.0/recorder_linux_amd64.zip
+$ unzip recorder_linux_amd64.zip
+$ mv recorder /usr/local/bin/
+$ chmod 755 /usr/local/bin/recorder
+```
+
+- Or to install, use `go get`:
+
+```bash
+$ go get -d github.com/heptagon-inc/recorder
+$ go get -u github.com/kardianos/govendor
+$ cd $GOPATH/src/github.com/heptagon-inc/recorder
+$ govendor sync
+$ go build
+```
+
+## Configure
+
+Set of credentials, or instances roll configuration required.
 
 - Set AWS configuration file.
 
@@ -40,88 +99,6 @@ aws_secret_access_key = XXXXXXXXXXXXXXX
         }
     ]
 }
-```
-
-- Run
-
-Execute `recorder ebs` or `recorder ami` .  
-But, `recorder ami` is buggy. (use not reccomend.)
-
-```
-$ recorder -h
-NAME:
-   recorder - Create a snapshot of the Amazon EC2.
-
-USAGE:
-   recorder [global options] command [command options] [arguments...]
-
-VERSION:
-   0.3.3
-
-AUTHOR(S):
-   youyo
-
-COMMANDS:
-     ebs  Snapshotting for specific instance's volume.
-     ami  Creating Image for specific instance
-
-GLOBAL OPTIONS:
-   --profile value, -p value  Set AWS-Credentials profile name. [$ENV_PROFILE]
-   --json, -j                 Log Format json.
-   --debug                    Set LogLevel Debug.
-   --help, -h                 show help
-   --version, -v              print the version
-```
-
-```
-$ recorder ebs -h
-NAME:
-   recorder ebs - Snapshotting for specific instance's volume.
-
-USAGE:
-   recorder ebs [command options] [arguments...]
-
-OPTIONS:
-   --self, -s                     Snapshotting for own volume.
-   --instance-id value, -i value  Set InstanceId. If '--self' option is set, this is ignored. (default: "i-xxxxxxx")
-   --region value, -r value       Set Region. If '--self' option is set, this is ignored. (default: "ap-northeast-1")
-   --lifecycle value, -l value    Set the number of life cycle for snapshot. (default: 5)
-```
-
-```
-$ recorder ami -h
-NAME:
-   recorder ami - Creating Image for specific instance
-
-USAGE:
-   recorder ami [command options] [arguments...]
-
-OPTIONS:
-   --self, -s                     Creating Image for own.
-   --instance-id value, -i value  Set InstanceId. If '--self' option is set, this is ignored. (default: "i-xxxxxxx")
-   --region value, -r value       Set Region. If '--self' option is set, this is ignored. (default: "ap-northeast-1")
-   --lifecycle value, -l value    Set the number of life cycle for AMI (default: 5)
-   --reboot                       Reboot instance when create image.
-```
-
-
-## Install
-
-Download binary-file.
-
-```
-$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.3.3/recorder_linux_amd64.zip
-$ unzip recorder_linux_amd64.zip
-$ mv recorder /usr/local/bin/
-$ chmod 755 /usr/local/bin/recorder
-```
-
-Or to install, use `go get`:
-
-```bash
-$ go get -d github.com/heptagon-inc/recorder
-$ cd $GOPATH/src/github.com/heptagon-inc/recorder
-$ go build
 ```
 
 ## Warning!
