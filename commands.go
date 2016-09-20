@@ -9,15 +9,6 @@ import (
 )
 
 var GlobalFlags = []cli.Flag{
-	cli.StringFlag{
-		EnvVar: "ENV_PROFILE",
-		Name:   "profile, p",
-		Usage:  "Set AWS-Credentials profile name.",
-	},
-	cli.BoolFlag{
-		Name:  "json, j",
-		Usage: "Log Format json.",
-	},
 	cli.BoolFlag{
 		Name:  "debug",
 		Usage: "Set LogLevel Debug.",
@@ -37,7 +28,6 @@ var Commands = []cli.Command{
 			},
 			cli.StringFlag{
 				Name:  "instance-id, i",
-				Value: "i-xxxxxxx",
 				Usage: "Set InstanceId. If '--self' option is set, this is ignored.",
 			},
 			cli.StringFlag{
@@ -71,14 +61,9 @@ var Commands = []cli.Command{
 				Value: "ap-northeast-1",
 				Usage: "Set Region. If '--self' option is set, this is ignored.",
 			},
-			cli.IntFlag{
-				Name:  "lifecycle, l",
-				Value: 5,
-				Usage: "Set the number of life cycle for AMI",
-			},
 			cli.BoolFlag{
 				Name:  "reboot",
-				Usage: "Reboot instance when create image.",
+				Usage: "Reboot instance when create image. (Default-value: false, NOT-Reboot.)",
 			},
 		},
 	},
