@@ -6,7 +6,7 @@
 
 Create EBS-Snapshot and AMI of the Amazon EC2.
 
-# Usage
+## Usage
 
 Execute `recorder ebs` or `recorder ami` .
 
