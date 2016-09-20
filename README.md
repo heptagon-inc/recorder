@@ -1,6 +1,6 @@
 # recorder
 
-[![CircleCI](https://circleci.com/gh/heptagon-inc/recorder.svg?style=svg)](https://circleci.com/gh/heptagon-inc/recorder)
+[![wercker status](https://app.wercker.com/status/5b8b5d5b3765a30a21226888642e47cf/s/master "wercker status")](https://app.wercker.com/project/byKey/5b8b5d5b3765a30a21226888642e47cf)
 
 ## Description
 
