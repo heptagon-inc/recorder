@@ -47,7 +47,7 @@ If you wish execute another profile, run `$ AWS_DEFAULT_PROFILE='another_profile
 - Download binary-file.
 
 ```
-$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.4.0/recorder_linux_amd64.zip
+$ wget https://github.com/heptagon-inc/recorder/releases/download/v0.4.1/recorder_linux_amd64.zip
 $ unzip recorder_linux_amd64.zip
 $ mv recorder /usr/local/bin/
 $ chmod 755 /usr/local/bin/recorder
