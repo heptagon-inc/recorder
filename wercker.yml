@@ -1,7 +1,7 @@
 test:
   box:
     id: youyo/gobuild:latest
-    cmd: /bin/sh
+    cmd: /bin/bash
   steps:
     - wercker/setup-go-workspace:
       package-dir: github.com/heptagon-inc/recorder
