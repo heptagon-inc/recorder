@@ -16,7 +16,7 @@ release:
     cmd: /bin/bash
   steps:
     - wercker/setup-go-workspace:
-      package-dir: github.com/youyo/zabbixctl
+      package-dir: github.com/heptagon-inc/recorder
     - script:
       name: Releases
       code: |-
