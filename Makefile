@@ -44,9 +44,10 @@ build-local: deps
 
 ## Release
 release: build
-	zip pkg/$(Name)_darwin_amd64.zip pkg/darwin_amd64/$(Name)
-	zip pkg/$(Name)_linux_amd64.zip pkg/linux_amd64/$(Name)
-	ghr -t ${GITHUB_TOKEN} -u $(OWNER) -r $(Name) --replace $(Version) pkg/*.zip
+	mkdir -p pkg/release
+	zip pkg/release/$(Name)_darwin_amd64.zip pkg/darwin_amd64/$(Name)
+	zip pkg/release/$(Name)_linux_amd64.zip pkg/linux_amd64/$(Name)
+	ghr -t ${GITHUB_TOKEN} -u $(OWNER) -r $(Name) --replace $(Version) pkg/release/
 
 ## Show help
 help:
