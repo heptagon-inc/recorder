@@ -1,7 +1,5 @@
 Name := recorder
 Version := $(shell git describe --tags --abbrev=0)
-GOOS := linux
-GOARCH := amd64
 OWNER := heptagon-inc
 .DEFAULT_GOAL := help
 
@@ -9,6 +7,7 @@ OWNER := heptagon-inc
 setup:
 	go get github.com/kardianos/govendor
 	go get github.com/Songmu/make2help/cmd/make2help
+	go get github.com/mitchellh/gox
 
 ## Install dependencies
 deps: setup
@@ -37,16 +36,17 @@ test: deps
 
 ## Build
 build: deps
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -ldflags "-X main.Version=$(Version) -X main.Name=$(Name)"
+	gox -osarch="darwin/amd64 linux/amd64" -ldflags="-X main.Version=$(Version) -X main.Name=$(Name)" -output="pkg/{{.OS}}_{{.Arch}}/$(Name)"
 
 ## Build
 build-local: deps
-	go build -ldflags "-X main.Version=$(Version) -X main.Name=$(Name)"
+	go build -ldflags "-X main.Version=$(Version) -X main.Name=$(Name)" -o pkg/$(Name)
 
 ## Release
 release: build
-	zip $(Name)_$(GOOS)_$(GOARCH).zip $(Name)
-	ghr -t ${GITHUB_TOKEN} -u $(OWNER) -r $(Name) --replace $(Version) $(Name)_$(GOOS)_$(GOARCH).zip
+	zip pkg/$(Name)_darwin_amd64.zip pkg/darwin_amd64/$(Name)
+	zip pkg/$(Name)_linux_amd64.zip pkg/linux_amd64/$(Name)
+	ghr -t ${GITHUB_TOKEN} -u $(OWNER) -r $(Name) --replace $(Version) pkg/*.zip
 
 ## Show help
 help:
